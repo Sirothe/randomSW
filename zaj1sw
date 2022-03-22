@@ -1,0 +1,54 @@
+#include <p24fj128ga010.h>
+
+//Konfiguracja dla Explorer 16 z progr. icd2
+_CONFIG1(JTAGEN_OFF & GCP_OFF & GWRP_OFF & BKBUG_OFF & COE_OFF & FWDTEN_OFF)
+_CONFIG2(FCKSM_CSDCMD & OSCIOFNC_ON & POSCMOD_HS & FNOSC_PRI)
+
+#define SCALE 308L
+
+int main(void){
+unsigned long i;
+unsigned char display=0;
+unsigned char displayx=0;
+unsigned char gray=0;
+//inicjalizacja
+ PORTA=0x0000;
+ TRISA=0xFF00;
+ TRISD=0xFFFF;
+ 
+//niekonczaca sie petla
+pierwsze:
+	Nop();
+	PORTA=display;
+	for(i=500L*SCALE;i>0;i--) Nop();
+	if (PORTDbits.RD13 == 0)
+	   goto drugie;
+	else if(PORTDbits.RD6 == 0)
+		display=0; //tutaj bedzie dziewiate
+	else
+		display=display+1;
+		goto pierwsze;
+drugie:
+	Nop();
+	PORTA=display;
+	for(i=500L*SCALE;i>0;i--) Nop();
+	if (PORTDbits.RD13 == 0)
+		goto trzecie;
+	else if(PORTDbits.RD6 == 0)
+		goto pierwsze;
+	else
+		display = display-1;
+		goto drugie;
+trzecie: //jeszcze nie zrobione
+	Nop();
+	PORTA=display;
+	for(i=500L*SCALE;i>0;i--) Nop();
+	if (PORTDbits.RD13 == 0)
+		display=0; //tu bedzie czwarty
+	else if(PORTDbits.RD6 == 0)
+		goto drugie;
+	else
+		displayx = displayx + 1;
+		grey = displayx ^ (displayx>>1);
+		display = grey;
+}
