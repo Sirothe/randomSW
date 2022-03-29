@@ -1,0 +1,159 @@
+#include <p24fj128ga010.h>
+
+#define true 1
+#define false 0
+
+//Konfiguracja dla Explorer 16 z progr. icd2
+_CONFIG1(JTAGEN_OFF & GCP_OFF & GWRP_OFF & BKBUG_OFF & COE_OFF & FWDTEN_OFF)
+_CONFIG2(FCKSM_CSDCMD & OSCIOFNC_ON & POSCMOD_HS & FNOSC_PRI)
+
+#define SCALE 308L
+
+int shift(int n, int k, int left)
+{
+	return (left == true) ? (n << k) : (n >> k);
+}
+
+int getRandom(int seed)
+{
+	int x = 1;
+	int i = 0;
+	
+	for (i = 0; i < seed; i++)
+	{
+		int xor = (x & 1) ^ ((x >> 1) & 1) ^ ((x >> 4) & 1) ^ ((x >> 5) & 1) ^ ((x >> 6) & 1);
+		x = x >> 1;
+		x |= xor << 5;
+	}
+	
+	return x;
+}
+
+int main(void)
+{
+	int program = 0;
+	unsigned long i;
+	unsigned char p0_p1_i = 0;
+	unsigned char p2_p3_i = 0;
+	unsigned char p4_p5_i = 0;
+	unsigned char display = 0;
+	unsigned char p8_random = 21;	//arbitrary seed
+	unsigned char p6_snake = 0;
+	unsigned char p7_queue = 0;
+	unsigned char p7_i = 1;
+	unsigned long delay = 500L*SCALE;	//500ms
+	//inicjalizacja
+	PORTA=0x0000;
+	TRISA=0xFF00;
+	TRISD=0xFFFF;
+
+loop:
+	Nop();
+	PORTA = display;
+	
+	for(i = 0; i < delay; i++)
+	{
+		Nop();
+	}
+	
+	if (PORTDbits.RD13 == 0)	//next program
+	{
+		program = program + 1;
+		if (program > 8)
+		{
+			program = 0;
+		}
+		
+		display = program;
+		
+		goto loop;
+	}
+	else if(PORTDbits.RD6 == 0)	//previous program
+	{
+		program = program - 1;
+		if (program < 0)
+		{
+			program = 8;
+		}
+		
+		display = program;
+		
+		goto loop;
+	}
+	
+	display = 0;
+	
+	switch (program)
+	{
+	case 0:	//licznik BIN 8bit rosnacy
+		display = p0_p1_i;
+		p0_p1_i++;
+		break;
+	//======================================================================
+	case 1:	//licznik BIN 8bit malejacy
+		display = p0_p1_i;
+		p0_p1_i--;
+		break;
+	//======================================================================
+	case 2: //licznik w kodzie GRAYa rosnacy
+		display = p2_p3_i ^ (p2_p3_i >> 1);
+		p2_p3_i++;
+		break;
+	//======================================================================
+	case 3: //licznik w kodzie GRAYa malejacy
+		display = p2_p3_i ^ (p2_p3_i >> 1);
+		p2_p3_i--;
+		break;
+	//======================================================================
+	case 4:	//2x4 licznik BCD rosnacy
+		break;
+	//======================================================================
+	case 5:	//2x4 licznik BCD malejacy
+		break;
+	//======================================================================
+	case 6: //wezyk 3-diodowy lewo/prawo
+		if (p6_snake < 6)
+		{
+			display = 7 << p6_snake;	//00000111b
+		}
+		else
+		{
+			display = 224 >> (p6_snake - 5);	//1110000b
+		}
+		p6_snake++;
+		if (p6_snake > 9)
+		{
+			p6_snake = 0;
+		}
+		break;
+	//======================================================================
+	case 7:	//kolejka
+		display = p7_queue | p7_i;
+		if (p7_queue == 255)	//if queue is full, reset
+		{
+			p7_queue = 0;
+			p7_i = 1;
+		}
+		else
+		{
+			if ((p7_i << 1) & p7_queue || p7_i == 128)	//if "next" bit collides or end of bit space
+			{
+				p7_queue |= p7_i;	//add current to "queue"
+				p7_i = 1;
+			}
+			else
+			{
+				p7_i = p7_i << 1;
+			}
+		}
+		break;
+	//======================================================================
+	case 8:	//PRNG, LFSR, 1110011
+		p8_random = getRandom(p8_random);
+		display = p8_random;
+		break;
+	}
+	
+	goto loop;
+
+}
