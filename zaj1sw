@@ -8,9 +8,13 @@ _CONFIG2(FCKSM_CSDCMD & OSCIOFNC_ON & POSCMOD_HS & FNOSC_PRI)
 
 int main(void){
 unsigned long i;
+unsigned long y;
 unsigned char display=0;
-unsigned char displayx=0;
-unsigned char gray=0;
+unsigned char grey=0;
+unsigned char tens=0;
+unsigned char ones=0;
+unsigned char number=0;
+unsigned char megawonszdziewiec=7;
 //inicjalizacja
  PORTA=0x0000;
  TRISA=0xFF00;
@@ -39,16 +43,75 @@ drugie:
 	else
 		display = display-1;
 		goto drugie;
-trzecie: //jeszcze nie zrobione
+trzecie:
 	Nop();
 	PORTA=display;
 	for(i=500L*SCALE;i>0;i--) Nop();
 	if (PORTDbits.RD13 == 0)
-		display=0; //tu bedzie czwarty
+		goto czwarte;
 	else if(PORTDbits.RD6 == 0)
 		goto drugie;
 	else
-		displayx = displayx + 1;
-		grey = displayx ^ (displayx>>1);
-		display = grey;
+		grey = grey + 1;
+		display = grey ^ (grey>>1);
+		goto trzecie;
+czwarte:
+	Nop();
+	PORTA=display;
+	for(i=500L*SCALE;i>0;i--) Nop();
+	if (PORTDbits.RD13 == 0)
+		goto piate;
+	else if(PORTDbits.RD6 == 0)
+		goto trzecie;
+	else
+		grey = grey - 1;
+		display = grey ^ (grey>>1);
+		goto czwarte;
+piate:
+	Nop();
+	PORTA=display;
+	for(i=500L*SCALE;i>0;i--) Nop();
+	if (PORTDbits.RD13 == 0)
+		goto szoste;
+	else if(PORTDbits.RD6 == 0)
+		goto czwarte;
+	else
+		number = number+1;
+		if (number == 100)
+			number = 0;
+		tens = (number - (number % 10))/10;
+		ones = number - (number - (number % 10));
+		display = (tens <<4) | ones;
+		goto piate;
+szoste:
+	Nop();
+	PORTA=display;
+	for(i=500L*SCALE;i>0;i--) Nop();
+	if (PORTDbits.RD13 == 0)
+		goto szoste;
+	else if(PORTDbits.RD6 == 0)
+		goto piate;
+	else
+		number = number-1;
+		if (number == -1)
+			number = 99;
+		tens = (number - (number % 10))/10;
+		ones = number - (number - (number % 10));
+		display = (tens <<4) | ones;
+		goto szoste;
+siedem:
+	Nop();
+	PORTA=display;
+	for(i=500L*SCALE;i>0;i--) Nop();
+	if (PORTDbits.RD13 == 0)
+		goto siedem;
+	else if(PORTDbits.RD6 == 0)
+		goto szoste;
+	else
+		display = megawonszdziewiec;
+		for (y=0;y<5;y++)
+			megawonszdziewiec = megawonszdziewiec << 1
+			
+		goto siedem;
+			
 }
