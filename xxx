@@ -1,0 +1,141 @@
+#include <p24fj128ga010.h>
+ 
+//Konfiguracja dla Explorer 16 z progr. icd2
+_CONFIG1(JTAGEN_OFF & GCP_OFF & GWRP_OFF & BKBUG_OFF & COE_OFF & FWDTEN_OFF)
+_CONFIG2(FCKSM_CSDCMD & OSCIOFNC_ON & POSCMOD_HS & FNOSC_PRI)
+ 
+#define SCALE 308L
+ 
+int main(void){
+unsigned long i;
+unsigned char display=0;
+unsigned char grey=0;
+unsigned char tens=0;
+unsigned char ones=0;
+unsigned char number=0;
+unsigned char megawonszdziewiec=224;
+unsigned char right = 1;
+unsigned char max=0;
+unsigned char item=1;
+unsigned char finalitem=0;
+//inicjalizacja
+ PORTA=0x0000;
+ TRISA=0xFF00;
+ TRISD=0xFFFF;
+ 
+//niekonczaca sie petla
+pierwsze:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+       goto drugie;
+    else if(PORTDbits.RD6 == 0)
+        goto osiem; //tutaj bedzie dziewiate
+    else
+        display=display+1;
+        goto pierwsze;
+drugie:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto trzecie;
+    else if(PORTDbits.RD6 == 0)
+        goto pierwsze;
+    else
+        display = display-1;
+        goto drugie;
+trzecie:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto czwarte;
+    else if(PORTDbits.RD6 == 0)
+        goto drugie;
+    else
+        grey = grey + 1;
+        display = grey ^ (grey>>1);
+        goto trzecie;
+czwarte:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto piate;
+    else if(PORTDbits.RD6 == 0)
+        goto trzecie;
+    else
+        grey = grey - 1;
+        display = grey ^ (grey>>1);
+        goto czwarte;
+piate:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto szoste;
+    else if(PORTDbits.RD6 == 0)
+        goto czwarte;
+    else
+        number = number+1;
+        if (number == 100)
+            number = 0;
+        tens = (number - (number % 10))/10;
+        ones = number - (number - (number % 10));
+        display = (tens <<4) | ones;
+        goto piate;
+szoste:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto siedem;
+    else if(PORTDbits.RD6 == 0)
+        goto piate;
+    else
+        number = number-1;
+        if (number == -1)
+            number = 99;
+        tens = (number - (number % 10))/10;
+        ones = number - (number - (number % 10));
+        display = (tens <<4) | ones;
+        goto szoste;
+ 
+siedem:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto osiem;
+    else if(PORTDbits.RD6 == 0)
+        goto szoste;
+    else 
+        if (megawonszdziewiec == 7)
+            right = 0;
+        if (megawonszdziewiec == 224)
+            right = 1;
+        if (megawonszdziewiec > 7 && right==1)
+            megawonszdziewiec = megawonszdziewiec >> 1;
+        if (megawonszdziewiec <= 224 && right==0)
+            megawonszdziewiec = megawonszdziewiec << 1;
+        display = megawonszdziewiec;
+        goto siedem;
+osiem:
+	Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto osiem;
+    else if(PORTDbits.RD6 == 0)
+        goto siedem;
+    else
+		item = max | item << 1;
+		display = item;
+		if (item == 128)
+			max = item;
+			item = 1;####
+			goto osiem;
+		goto osiem;
+}
