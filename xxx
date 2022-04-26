@@ -16,8 +16,8 @@ unsigned char number=0;
 unsigned char megawonszdziewiec=224;
 unsigned char right = 1;
 unsigned char max=0;
-unsigned char item=1;
-unsigned char finalitem=0;
+unsigned char item=0;
+unsigned char seed=0;
 //inicjalizacja
  PORTA=0x0000;
  TRISA=0xFF00;
@@ -127,15 +127,35 @@ osiem:
     PORTA=display;
     for(i=500L*SCALE;i>0;i--) Nop();
     if (PORTDbits.RD13 == 0)
-        goto osiem;
+        goto dziewiec;
     else if(PORTDbits.RD6 == 0)
         goto siedem;
     else
-		item = max | item << 1;
-		display = item;
-		if (item == 128)
+		if (item == 0) {
+			item = 1;
+			display = max | item;
+		} else {
+			item = max |(item << 1);
+			display = item;
+		}
+		if (item == 128 || item == 192 || item == 224 || item == 240 || item == 248 || item == 252 || item == 254) {
 			max = item;
-			item = 1;####
-			goto osiem;
+			item = 0;
+		}
+		if (display == 255) {
+			max = 0;
+			item = 0;
+		}
 		goto osiem;
+dziewiec:
+	Nop();
+	PORTA=display;
+	for(i=500L*SCALE;i>0;i--) Nop();
+	if (PORTDbits.RD13 == 0)
+		goto dziewiec;
+	else if(PORTDbits.RD6 == 0)
+		goto osiem;
+	else
+		
+		goto dziewiec;
 }
