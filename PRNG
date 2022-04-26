@@ -1,0 +1,31 @@
+int prng(int seed){
+    int i = 0;
+ 
+    int check = -1;
+ 
+ 
+    while (check < 1){
+ 
+    if (seed == 1){
+        check +=1;
+    }
+    int first = nthbit(seed,0);
+    int second = nthbit(seed, 1);
+    int fifth = nthbit(seed,5);
+    int sixth = nthbit(seed,6);
+ 
+    int xor = first ^ second ^ fifth ^ sixth;
+ 
+    int seed_moved = seed >> 1;
+    int xor_moved = xor << 5;
+ 
+    int random_number = seed_moved | xor_moved;
+ 
+    seed =  random_number;
+ 
+    if (check < 1){
+        printf("%d \n",random_number);
+    }
+    }
+ 
+}
