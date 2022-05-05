@@ -1,0 +1,190 @@
+#include <p24fj128ga010.h>
+ 
+//Konfiguracja dla Explorer 16 z progr. icd2
+_CONFIG1(JTAGEN_OFF & GCP_OFF & GWRP_OFF & BKBUG_OFF & COE_OFF & FWDTEN_OFF)
+_CONFIG2(FCKSM_CSDCMD & OSCIOFNC_ON & POSCMOD_HS & FNOSC_PRI)
+ 
+#define SCALE 308L
+ 
+int main(void){
+unsigned long i;
+unsigned char display=0;
+unsigned char grey=0;
+unsigned char tens=0;
+unsigned char ones=0;
+unsigned char number=0;
+unsigned char megawonszdziewiec=224;
+unsigned char right = 1;
+unsigned char max=0;
+unsigned char item=0;
+unsigned char seed=48;
+unsigned int first = 0;
+unsigned int second = 0;
+unsigned int fifth = 0;
+unsigned int sixth = 0;
+unsigned int xor = 0;
+unsigned int seed_moved =0;
+unsigned int xor_moved = 0;
+unsigned int random_number = 0;
+//inicjalizacja
+ PORTA=0x0000;
+ TRISA=0xFF00;
+ TRISD=0xFFFF;
+
+
+int nthbit(int num, int n){
+    int wartoscBita = (num >> n-1) & 1;
+    return wartoscBita;
+}
+ 
+//niekonczaca sie petla
+pierwsze:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+       goto drugie;
+    else if(PORTDbits.RD6 == 0)
+        goto dziewiec;
+    else
+        display=display+1;
+        goto pierwsze;
+drugie:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto trzecie;
+    else if(PORTDbits.RD6 == 0)
+        goto pierwsze;
+    else
+        display = display-1;
+        goto drugie;
+trzecie:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto czwarte;
+    else if(PORTDbits.RD6 == 0)
+        goto drugie;
+    else
+        grey = grey + 1;
+        display = grey ^ (grey>>1);
+        goto trzecie;
+czwarte:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto piate;
+    else if(PORTDbits.RD6 == 0)
+        goto trzecie;
+    else
+        grey = grey - 1;
+        display = grey ^ (grey>>1);
+        goto czwarte;
+piate:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto szoste;
+    else if(PORTDbits.RD6 == 0)
+        goto czwarte;
+    else
+        number = number+1;
+        if (number == 100)
+            number = 0;
+        tens = (number - (number % 10))/10;
+        ones = number - (number - (number % 10));
+        display = (tens <<4) | ones;
+        goto piate;
+szoste:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto siedem;
+    else if(PORTDbits.RD6 == 0)
+        goto piate;
+    else
+        number = number-1;
+        if (number == -1)
+            number = 99;
+        tens = (number - (number % 10))/10;
+        ones = number - (number - (number % 10));
+        display = (tens <<4) | ones;
+        goto szoste;
+ 
+siedem:
+    Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto osiem;
+    else if(PORTDbits.RD6 == 0)
+        goto szoste;
+    else 
+        if (megawonszdziewiec == 7)
+            right = 0;
+        if (megawonszdziewiec == 224)
+            right = 1;
+        if (megawonszdziewiec > 7 && right==1)
+            megawonszdziewiec = megawonszdziewiec >> 1;
+        if (megawonszdziewiec <= 224 && right==0)
+            megawonszdziewiec = megawonszdziewiec << 1;
+        display = megawonszdziewiec;
+        goto siedem;
+osiem:
+	Nop();
+    PORTA=display;
+    for(i=500L*SCALE;i>0;i--) Nop();
+    if (PORTDbits.RD13 == 0)
+        goto dziewiec;
+    else if(PORTDbits.RD6 == 0)
+        goto siedem;
+    else
+		if (item == 0) {
+			item = 1;
+			display = max | item;
+		} else {
+			item = max |(item << 1);
+			display = item;
+		}
+		if (item == 128 || item == 192 || item == 224 || item == 240 || item == 248 || item == 252 || item == 254) {
+			max = item;
+			item = 0;
+		}
+		if (display == 255) {
+			max = 0;
+			item = 0;
+		}
+		goto osiem;
+dziewiec:
+	Nop();
+	PORTA=display;
+	for(i=500L*SCALE;i>0;i--) Nop();
+	if (PORTDbits.RD13 == 0)
+		goto pierwsze;
+	else if(PORTDbits.RD6 == 0)
+		goto osiem;
+	else
+	{
+		first = nthbit(seed,0);
+	    second = nthbit(seed, 1);
+	    fifth = nthbit(seed,5);
+	    sixth = nthbit(seed,6);
+	
+	    xor = first ^ second ^ fifth ^ sixth;
+	
+	    seed_moved = seed >> 1;
+	    xor_moved = xor << 5;
+	
+	    random_number = seed_moved | xor_moved;
+	
+	    seed =  random_number;
+		display = seed;
+		goto dziewiec;
+	}
+}
