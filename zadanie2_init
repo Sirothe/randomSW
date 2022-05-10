@@ -39,20 +39,90 @@ int main(void)
 	unsigned char display = 0;
 	int temp;
 	unsigned int szybkosc = 10L;
+	int end;
 
 	PORTA = display;
 	ADCinit(AINPUTS); /*inicjalizacja konwertera AD*/
 
-	display = 0;
-
 	while (1) {
-		PORTA=display;
+		end=0;
 		Nop();
 
 		for (i = szybkosc * SCALE; i > 0; i--) Nop();
 		temp = readADC(TSENS);
-		if (temp>250) {
-			for (x=500L*SCALE;x>0;x--) Nop();
+		if (temp>250) 
+		{
+			if (end!=1)
+			{ 
+				PORTA=1;
+				for (x=500L*SCALE;x>0;x--) Nop();
+				temp= readADC(TSENS);
+				if (temp<250)
+				{
+					PORTA=0;
+					end=1;
+				}
+			}
+			if (end!=1)
+			{ 
+				PORTA=0;
+				for (x=500L*SCALE;x>0;x--) Nop();
+				temp= readADC(TSENS);
+				if (temp<250)
+				{
+					PORTA=0;
+					end=1;
+				}
+			}
+			if (end!=1)
+			{ 
+				PORTA=1;
+				for (x=500L*SCALE;x>0;x--) Nop();
+				temp= readADC(TSENS);
+				if (temp<250)
+				{
+					PORTA=0;
+					end=1;
+				}
+			}
+			if (end!=1)
+			{ 
+				PORTA=0;
+				for (x=500L*SCALE;x>0;x--) Nop();
+				temp= readADC(TSENS);
+				if (temp<250)
+				{
+					PORTA=0;
+					end=1;
+				}
+			}
+			if (end!=1)
+			{ 
+				PORTA=1;
+				for (x=500L*SCALE;x>0;x--) Nop();
+				temp= readADC(TSENS);
+				if (temp<250)
+				{
+					PORTA=0;
+					end=1;
+				}
+			}
+			if (end!=1)
+			{ 
+				PORTA=0;
+				for (x=500L*SCALE;x>0;x--) Nop();
+				temp= readADC(TSENS);
+				if (temp<250)
+				{
+					PORTA=0;
+					end=1;
+				}
+			}
+			temp= readADC(TSENS);
+			while (temp>250) 
+			{
+				PORTA=255;
+			}
 		}
 	}
 }
