@@ -197,6 +197,21 @@ void setup(char* linia) {
     lcd_str("0:00        0:00");
 }
 
+void wyswietl_czas(char* linia,unsigned int gracz1_czas,unsigned int gracz2_czas) {
+    linia[0]=liczba_na_string(gracz1_czas/60);
+    linia[1]=':';
+    linia[2]=liczba_na_string((gracz1_czas%60)/10);
+    linia[3]=liczba_na_string((gracz1_czas%60)%10);
+                
+    linia[12]=liczba_na_string(gracz2_czas/60);
+    linia[13]=':';
+    linia[14]=liczba_na_string((gracz2_czas%60)/10);
+    linia[15]=liczba_na_string((gracz2_czas%60)%10);
+                
+    lcd_cmd(L_L2);
+    lcd_str(linia);
+}
+
 
 void main(void) {
     
@@ -234,23 +249,23 @@ void main(void) {
         
         display=(unsigned char)(tmp);
         
-        delay(1000);
-        if (PORTD >= 0 && PORTD < 34) {
+        if (PORTD < 34) {
             if (active == false) {
                 gracz1_czas=60;
                 gracz2_czas=60;
+                wyswietl_czas(linia,gracz1_czas,gracz2_czas);
             }
-        }
-        if (PORTD >= 34 && PORTD < 68) {
+        } else if (PORTD >= 34 && PORTD < 68) {
             if (active == false) {
                 gracz1_czas=60*3;
                 gracz2_czas=60*3;
+                wyswietl_czas(linia,gracz1_czas,gracz2_czas);
             }
-        }
-        if (PORTD >= 68 && PORTD <= 102) {
+        } else {
             if (active == false) {
                 gracz1_czas=60*5;
                 gracz2_czas=60*5;
+                wyswietl_czas(linia,gracz1_czas,gracz2_czas);
             }
         }
     }
